@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
 
+// Класс, хранящий информацию о странице
 public class RefreshPage {
 	public String path;
 	public String name;

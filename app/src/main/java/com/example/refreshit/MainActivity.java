@@ -5,13 +5,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.LayoutManager;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.EditText;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -37,12 +35,12 @@ public class MainActivity extends AppCompatActivity {
 
 		layoutManager = new LinearLayoutManager(this);
 		actives.setLayoutManager(layoutManager);
-		ActiveAdapter adapter1 = new ActiveAdapter(this, active_pages);
+		SiteAdapter adapter1 = new SiteAdapter(this, active_pages);
 		actives.setAdapter(adapter1);
 
 		layoutManager = new LinearLayoutManager(this);
 		arhived.setLayoutManager(layoutManager);
-		ActiveAdapter adapter2 = new ActiveAdapter(this, arhive_pages);
+		SiteAdapter adapter2 = new SiteAdapter(this, arhive_pages);
 		arhived.setAdapter(adapter2);
 	}
 
@@ -54,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	public void add_click(View view){
-
+		Intent to_browser = new Intent(MainActivity.this, BrowserActivity.class);
+		startActivity(to_browser);
 	}
 }
