@@ -1,5 +1,6 @@
 package com.example.refreshit;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,13 +9,14 @@ import android.view.ViewGroup;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 // Класс заполняет RecyclerView элементами (сайтами которые нужно чекать)
 public class SiteAdapter extends RecyclerView.Adapter<ViewHolder> {
 	private LayoutInflater inflater;
-	private List<RefreshPage> pages;
+	private List<PageInfo> pages;
 
-	SiteAdapter(Context context, List<RefreshPage> pages) {
+	SiteAdapter(Context context, List<PageInfo> pages) {
 		this.pages = pages;
 		this.inflater = LayoutInflater.from(context);
 	}
@@ -26,11 +28,12 @@ public class SiteAdapter extends RecyclerView.Adapter<ViewHolder> {
 		return new ViewHolder(view);
 	}
 
+	@SuppressLint("SetTextI18n")
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position) {
-		RefreshPage page = pages.get(position);
+		PageInfo page = pages.get(position);
 		holder.nameText.setText(page.name);
-		holder.delayText.setText(page.delay_s);
+		holder.delayText.setText(String.valueOf(page.delayTime) + " " + TimeUnit.values()[page.delayUnit].name());
 	}
 
 	@Override

@@ -37,7 +37,7 @@
             android:id="@+id/url_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="30dp"
+            android:layout_marginHorizontal="32dp"
             android:layout_marginBottom="5dp"
             android:text="http:/google.com" />
 
@@ -56,17 +56,19 @@
             android:checkedButton="@id/rbutton_1_hour">
 
             <RadioButton
-                android:id="@+id/rbutton_10_min"
+                android:id="@+id/rbutton_15_min"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
-                android:text="10 min" />
+                android:onClick="reselect_delay"
+                android:text="15 min" />
 
             <RadioButton
                 android:id="@+id/rbutton_30_min"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
+                android:onClick="reselect_delay"
                 android:text="30 min" />
 
             <RadioButton
@@ -74,6 +76,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
+                android:onClick="reselect_delay"
                 android:text="1 hour" />
 
             <RadioButton
@@ -81,6 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
+                android:onClick="reselect_delay"
                 android:text="3 hours" />
 
             <RadioButton
@@ -88,13 +92,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
-                android:text="8 hour" />
+                android:onClick="reselect_delay"
+                android:text="8 hours" />
 
             <RadioButton
                 android:id="@+id/rbutton_1_day"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
+                android:onClick="reselect_delay"
                 android:text="1 day" />
         </RadioGroup>
 

@@ -1,5 +1,6 @@
 package com.example.refreshit;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -10,6 +11,8 @@ import android.widget.Button;
 
 // Активность для выбора страницы, за которой нужно следить
 public class BrowserActivity extends AppCompatActivity {
+
+	static final private int ADD_PAGE = 1;
 
 	WebView webView;
 	Button confirm_button;
@@ -37,8 +40,11 @@ public class BrowserActivity extends AppCompatActivity {
 	}
 
 	public void confirm_click(View view) {
-		Intent to_params = new Intent(BrowserActivity.this, ParamsActivity.class);
-		to_params.putExtra("Url", webView.getUrl());
-		startActivity(to_params);
+		Intent answerIntent = new Intent();
+
+		answerIntent.putExtra("Url", webView.getUrl());
+
+		setResult(RESULT_OK, answerIntent);
+		finish();
 	}
 }
