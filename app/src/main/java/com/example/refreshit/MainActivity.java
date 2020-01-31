@@ -13,9 +13,16 @@ import androidx.work.WorkManager;
 import android.content.Intent;
 import android.content.PeriodicSync;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
 	static final private int GET_URL = 1;
 	static final private int GET_PARAMS = 2;
+	static final private String PAGE_LIST_FILE = "_PAGE_LIST_";
 
 	List<PageInfo> active_pages = new ArrayList<>(), arhive_pages = new ArrayList<>();
 	Button add_button, clear_button;
@@ -58,14 +66,97 @@ public class MainActivity extends AppCompatActivity {
 
 	}
 
-	private void setInitialData(){
-		active_pages.add(new PageInfo ("www.google.com", "google", 15, TimeUnit.MINUTES.ordinal(), true));
-		active_pages.add(new PageInfo ("www.cats.net", "caaats!", 1, TimeUnit.HOURS.ordinal(), true));
+	private void setInitialData() {
 
-		arhive_pages.add(new PageInfo ("http://www.php.net", "php", 92, TimeUnit.DAYS.ordinal(), false));
+		printFile(PAGE_LIST_FILE);
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					openFileInput(PAGE_LIST_FILE)));
+
+
+			int active_count = Integer.parseInt(br.readLine());
+			for (int i = 0; i < active_count; i++) {
+				//printFile(br.readLine());
+				active_pages.add(new PageInfo(br.readLine(), MainActivity.this));
+			}
+			int arhive_count = Integer.parseInt(br.readLine());
+			for (int i = 0; i < arhive_count; i++) {
+				arhive_pages.add(new PageInfo(br.readLine(), MainActivity.this));
+			}
+
+			br.close();
+			Log.d("MainActivity", "Файл считан\n");
+		} catch (Exception e) {
+			try {
+				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+						openFileOutput(PAGE_LIST_FILE, MODE_PRIVATE)));
+				bw.write("0\n0\n");
+
+				bw.close();
+			}catch (IOException e2) {
+				e.printStackTrace();
+				e2.printStackTrace();
+			}
+		}
+
 	}
 
-	public void add_click(View view){
+	@Override
+	protected void onStop() {
+		super.onStop();
+		savePageList();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		savePageList();
+	}
+
+	void savePageList(){
+		try {
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+					openFileOutput(PAGE_LIST_FILE, MODE_PRIVATE)));
+
+			bw.write(String.valueOf(active_pages.size()));
+			bw.newLine();
+			for (int i = 0; i < active_pages.size(); i++) {
+				bw.write(active_pages.get(i).getFileName());
+				bw.newLine();
+			}
+			bw.write(String.valueOf(arhive_pages.size()));
+			bw.newLine();
+			for (int i = 0; i < arhive_pages.size(); i++) {
+				bw.write(arhive_pages.get(i).getFileName());
+				bw.newLine();
+			}
+
+			bw.close();
+			Log.d("MainActivity", "Все сохранено\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		printFile(PAGE_LIST_FILE);
+	}
+
+	void printFile(String file) {
+		String s = "";
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					openFileInput(file)));
+
+			s = br.readLine();
+			while (s != null) {
+				Log.d("MainActivity", s);
+				s = br.readLine();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void add_click(View view) {
 		path = name = "";
 		delayTime = delayUnit = -1;
 
@@ -87,8 +178,8 @@ public class MainActivity extends AppCompatActivity {
 			}
 		}
 
-		if(requestCode == GET_PARAMS){
-			if(resultCode == RESULT_OK){
+		if (requestCode == GET_PARAMS) {
+			if (resultCode == RESULT_OK) {
 				name = data.getStringExtra("Name");
 				delayTime = data.getIntExtra("DelayTime", 1);
 				delayUnit = data.getIntExtra("DelayUnit", TimeUnit.HOURS.ordinal());
@@ -98,8 +189,12 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-	void add_page(){
+	void add_page() {
 		PageInfo page = new PageInfo(name, path, delayTime, delayUnit, true);
+
+		page.saveToStorage(MainActivity.this);
+		savePageList();
+
 		active_pages.add(page);
 		active_adapter.notifyItemRangeInserted(active_pages.size() - 1, 1);
 	}
