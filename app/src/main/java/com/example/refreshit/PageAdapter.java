@@ -12,20 +12,24 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 // Класс заполняет RecyclerView элементами (сайтами которые нужно чекать)
-public class SiteAdapter extends RecyclerView.Adapter<ViewHolder> {
+public class PageAdapter extends RecyclerView.Adapter<ViewHolder> {
 	private LayoutInflater inflater;
 	private List<PageInfo> pages;
+	Context context;
+	boolean isActive;
 
-	SiteAdapter(Context context, List<PageInfo> pages) {
+	PageAdapter(Context context, List<PageInfo> pages, boolean isActive) {
+		this.context = context;
 		this.pages = pages;
 		this.inflater = LayoutInflater.from(context);
+		this.isActive = isActive;
 	}
 
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
 		View view = inflater.inflate(R.layout.active_list_item, parent, false);
-		return new ViewHolder(view);
+		return new ViewHolder(view, context, isActive);
 	}
 
 	@SuppressLint("SetTextI18n")

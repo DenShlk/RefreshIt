@@ -3,15 +3,10 @@ package com.example.refreshit;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.LayoutManager;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
 
 import android.content.Intent;
-import android.content.PeriodicSync;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,7 +14,6 @@ import android.widget.Button;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -32,12 +26,13 @@ public class MainActivity extends AppCompatActivity {
 	static final private int GET_URL = 1;
 	static final private int GET_PARAMS = 2;
 	static final private String PAGE_LIST_FILE = "_PAGE_LIST_";
+	static final private String TAG = "DEBUG_MAIN_ACTIVE";
 
-	List<PageInfo> active_pages = new ArrayList<>(), arhive_pages = new ArrayList<>();
+	List<PageInfo> active_pages = new ArrayList<>(), archive_pages = new ArrayList<>();
 	Button add_button, clear_button;
-	RecyclerView actives, arhived;
-	LayoutManager layoutManager;
-	SiteAdapter active_adapter, arhive_adapter;
+	RecyclerView actives, archived;
+
+	PageAdapter active_adapter, archive_adapter;
 
 	String path, name;
 	int delayTime, delayUnit;
@@ -50,20 +45,61 @@ public class MainActivity extends AppCompatActivity {
 		add_button = findViewById(R.id.add_button);
 		clear_button = findViewById(R.id.clear_button);
 		actives = findViewById(R.id.actives);
-		arhived = findViewById(R.id.arhived);
+		archived = findViewById(R.id.archived);
 
 		setInitialData();
 
-		layoutManager = new LinearLayoutManager(this);
+		LayoutManager layoutManager = new LinearLayoutManager(this);
 		actives.setLayoutManager(layoutManager);
-		active_adapter = new SiteAdapter(this, active_pages);
+		active_adapter = new PageAdapter(this, active_pages, true);
 		actives.setAdapter(active_adapter);
 
 		layoutManager = new LinearLayoutManager(this);
-		arhived.setLayoutManager(layoutManager);
-		arhive_adapter = new SiteAdapter(this, arhive_pages);
-		arhived.setAdapter(arhive_adapter);
+		archived.setLayoutManager(layoutManager);
+		archive_adapter = new PageAdapter(this, archive_pages, false);
+		archived.setAdapter(archive_adapter);
 
+	}
+
+	void activeItemClick(View view, int position){
+		if(view instanceof Button){
+
+			Button button = (Button) view;
+			switch (String.valueOf(button.getText())){
+				case("C"):
+					//TODO: item changing
+					break;
+				case("A"):
+					addArchive(active_pages.get(position));
+					deleteActive(position);
+					break;
+				case("D"):
+					deleteActive(position);
+					break;
+			}
+		}
+	}
+
+	void archiveItemClick(View view, int position){
+		if(view instanceof Button){
+			Button button = (Button) view;
+			switch (String.valueOf(button.getText())){
+				case("C"):
+					//TODO: item changing
+					addActive(archive_pages.get(position));
+					deleteArchive(position);
+					break;
+				case("A"):
+					addActive(archive_pages.get(position));
+					deleteArchive(position);
+
+					active_pages.get(active_pages.size() - 1).runWorker();
+					break;
+				case("D"):
+					deleteArchive(position);
+					break;
+			}
+		}
 	}
 
 	private void setInitialData() {
@@ -79,9 +115,9 @@ public class MainActivity extends AppCompatActivity {
 				//printFile(br.readLine());
 				active_pages.add(new PageInfo(br.readLine(), MainActivity.this));
 			}
-			int arhive_count = Integer.parseInt(br.readLine());
-			for (int i = 0; i < arhive_count; i++) {
-				arhive_pages.add(new PageInfo(br.readLine(), MainActivity.this));
+			int archive_count = Integer.parseInt(br.readLine());
+			for (int i = 0; i < archive_count; i++) {
+				archive_pages.add(new PageInfo(br.readLine(), MainActivity.this));
 			}
 
 			br.close();
@@ -124,10 +160,10 @@ public class MainActivity extends AppCompatActivity {
 				bw.write(active_pages.get(i).getFileName());
 				bw.newLine();
 			}
-			bw.write(String.valueOf(arhive_pages.size()));
+			bw.write(String.valueOf(archive_pages.size()));
 			bw.newLine();
-			for (int i = 0; i < arhive_pages.size(); i++) {
-				bw.write(arhive_pages.get(i).getFileName());
+			for (int i = 0; i < archive_pages.size(); i++) {
+				bw.write(archive_pages.get(i).getFileName());
 				bw.newLine();
 			}
 
@@ -184,18 +220,44 @@ public class MainActivity extends AppCompatActivity {
 				delayTime = data.getIntExtra("DelayTime", 1);
 				delayUnit = data.getIntExtra("DelayUnit", TimeUnit.HOURS.ordinal());
 
-				add_page();
+				PageInfo page = new PageInfo(name, path, delayTime, delayUnit, true);
+				page.saveToStorage(MainActivity.this);
+
+				addActive(page);
 			}
 		}
 	}
 
-	void add_page() {
-		PageInfo page = new PageInfo(name, path, delayTime, delayUnit, true);
-
-		page.saveToStorage(MainActivity.this);
+	void addActive(PageInfo page) {
+		active_pages.add(page);
 		savePageList();
 
-		active_pages.add(page);
 		active_adapter.notifyItemRangeInserted(active_pages.size() - 1, 1);
+	}
+
+	void deleteActive(int position) {
+		//TODO: stop process
+		active_pages.remove(position);
+		savePageList();
+
+		active_adapter.notifyItemRangeRemoved(position, 1);
+	}
+
+	void addArchive(PageInfo page) {
+		archive_pages.add(page);
+		savePageList();
+
+		archive_adapter.notifyItemRangeInserted(archive_pages.size() - 1, 1);
+	}
+
+	void deleteArchive(int position) {
+		archive_pages.remove(position);
+		archive_adapter.notifyItemRangeRemoved(position, 1);
+		savePageList();
+	}
+
+	public void clearClick(View view){
+		while(!archive_pages.isEmpty())
+			deleteArchive(0);
 	}
 }

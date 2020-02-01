@@ -54,7 +54,7 @@
             android:textSize="24sp" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/arhived"
+            android:id="@+id/archived"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="30dp">
@@ -67,6 +67,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="30dp"
             android:layout_marginVertical="10dp"
+            android:onClick="clearClick"
             android:text="Clear arhive" />
 
     </LinearLayout>
