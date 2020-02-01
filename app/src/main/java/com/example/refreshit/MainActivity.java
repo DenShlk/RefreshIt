@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.LayoutManager;
+import androidx.work.WorkManager;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -40,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//WorkManager.getInstance().cancelAllWork();
+
 		setContentView(R.layout.activity_main);
 
 		add_button = findViewById(R.id.add_button);
@@ -236,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	void deleteActive(int position) {
-		//TODO: stop process
+		active_pages.get(position).stopWorker();
 		active_pages.remove(position);
 		savePageList();
 

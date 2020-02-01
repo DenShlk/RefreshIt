@@ -5,17 +5,15 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
 
-import java.util.concurrent.TimeUnit;
-
 public class PageRefresher  extends Worker {
 	@NonNull
 	@Override
-	public WorkerResult doWork() {
+	public Result doWork() {
 
 		PageInfo page = new PageInfo(getInputData());
 
-		Log.d("BackWorker", page.name);
+		Log.d("PageRefresher", page.name);
 
-		return WorkerResult.SUCCESS;
+		return Result.SUCCESS;
 	}
 }

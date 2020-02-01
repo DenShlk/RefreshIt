@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.util.Log;
 
 import androidx.work.Data;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -36,12 +38,18 @@ public class PageInfo{
 	}
 
 	public void runWorker(){
-		PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(PageRefresher.class, 15, TimeUnit.MINUTES)
+		PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(PageRefresher.class,
+				15, TimeUnit.MINUTES)
 				.setInputData(packData())
 				.addTag(path)
 				.build();
 
-		WorkManager.getInstance().enqueue(workRequest);
+		WorkManager.getInstance().enqueueUniquePeriodicWork("Send Data",  ExistingPeriodicWorkPolicy.KEEP
+				,workRequest);
+	}
+
+	public void stopWorker(){
+		WorkManager.getInstance().cancelAllWorkByTag("path");
 	}
 
 	public PageInfo(Data data){
