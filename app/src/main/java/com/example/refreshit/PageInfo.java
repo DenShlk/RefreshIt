@@ -1,59 +1,73 @@
 package com.example.refreshit;
 
 import android.app.Activity;
+import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.ExistingWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.concurrent.TimeUnit;
 
 public class PageInfo{
 	String name, path;
-	int delayTime, delayUnit;
-	int dataHash = 0; // why not?
+	int delayTime;
+	int delayUnit;
+	int contentHash = 0; // why not?
+	Context context;
 
 	public PageInfo(String name, String path, int delayTime, int delayUnit, boolean runWork) {
 		this.name = name;
 		this.path = path;
 		this.delayTime = delayTime;
 		this.delayUnit = delayUnit;
+		setContent(runWork);
 
+		if(runWork){
+			runWorker();
+		}
+
+	}
+
+	public PageInfo(String fileName, Context context, boolean runWork){
+		readFromStorage(fileName, context);
 		if(runWork){
 			runWorker();
 		}
 	}
 
-	public PageInfo(String fileName, Activity active){
-		readFromStorage(fileName, active);
+
+	public PageInfo(Data data){
+		unpackData(data);
 	}
+
+
 
 	public void runWorker(){
 		PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(PageRefresher.class,
-				15, TimeUnit.MINUTES)
+				delayTime, TimeUnit.values()[delayUnit])
+				.setInitialDelay(1, TimeUnit.MINUTES)
 				.setInputData(packData())
 				.addTag(path)
 				.build();
 
-		WorkManager.getInstance().enqueueUniquePeriodicWork("Send Data",  ExistingPeriodicWorkPolicy.KEEP
+		WorkManager.getInstance().enqueueUniquePeriodicWork("Send Data",  ExistingPeriodicWorkPolicy.REPLACE
 				,workRequest);
 	}
 
 	public void stopWorker(){
-		WorkManager.getInstance().cancelAllWorkByTag("path");
-	}
-
-	public PageInfo(Data data){
-		unpackData(data);
+		WorkManager.getInstance().cancelAllWorkByTag(path);
 	}
 
 	Data packData(){
@@ -62,16 +76,18 @@ public class PageInfo{
 				.putString("Path", path)
 				.putInt("DelayTime", delayTime)
 				.putInt("DelayUnit", delayUnit)
+				.putInt("ContentHash", contentHash)
 				.build();
 
 		return data;
 	}
 
 	void unpackData(Data data){
-		name = data.getString("Name", "undefined");
-		path = data.getString("Path", "undefined");
+		name = data.getString("Name");
+		path = data.getString("Path");
 		delayTime = data.getInt("DelayTime", -1);
 		delayUnit = data.getInt("DelayUnit", -1);
+		contentHash = data.getInt("ContentHash", -1);
 	}
 
 	String getFileName(){
@@ -84,12 +100,13 @@ public class PageInfo{
 	<path>
 	<delayTime>
 	<delayUnit>
-	<dataHash>
+	<contentHash>
 	 */
-	String saveToStorage(Activity active){
+	String saveToStorage(Context context){
+		this.context = context;
 		try {
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-					active.openFileOutput(getFileName(), active.MODE_PRIVATE)));
+					context.openFileOutput(getFileName(), context.MODE_PRIVATE)));
 			bw.write(name);
 			bw.newLine();
 			bw.write(path);
@@ -98,7 +115,7 @@ public class PageInfo{
 			bw.newLine();
 			bw.write(String.valueOf(delayUnit));
 			bw.newLine();
-			bw.write(String.valueOf(dataHash));
+			bw.write(String.valueOf(contentHash));
 			bw.newLine();
 			bw.close();
 			Log.d("PageInfo", "Файл записан\n");
@@ -109,16 +126,17 @@ public class PageInfo{
 		return getFileName();
 	}
 
-	void readFromStorage(String fileName, Activity active){
+	void readFromStorage(String fileName, Context context){
+		this.context = context;
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(
-					active.openFileInput(fileName)));
+					context.openFileInput(fileName)));
 
 			name = br.readLine();
 			path = br.readLine();
 			delayTime = Integer.parseInt(br.readLine());
 			delayUnit = Integer.parseInt(br.readLine());
-			dataHash = Integer.parseInt(br.readLine());
+			contentHash = Integer.parseInt(br.readLine());
 
 			br.close();
 			Log.d("PageInfo", "Файл считан\n");
@@ -127,8 +145,65 @@ public class PageInfo{
 		}
 	}
 
-	void clearStorage(Activity active){
-		active.deleteFile(getFileName());
+	void clearStorage(Context context){
+		context.deleteFile(getFileName());
 		Log.d("PageInfo", "Файл удален :(\n");
 	}
+
+	public static String getHtml(String url) throws Exception {
+		// Build and set timeout values for the request.
+		URLConnection connection = (new URL(url)).openConnection();
+		connection.setConnectTimeout(5000);
+		connection.setReadTimeout(5000);
+		connection.connect();
+
+		// Read and store the result line by line then return the entire string.
+		InputStream in = connection.getInputStream();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		StringBuilder html = new StringBuilder();
+		for (String line; (line = reader.readLine()) != null; ) {
+			html.append(line);
+		}
+		in.close();
+		Log.d("Html", "loaded");
+		return html.toString();
+	}
+
+	public boolean checkContentUpdates(){
+		try {
+			String newHtml = getHtml(path);
+			int newHash = newHtml.hashCode();
+			Log.d("Hashes", contentHash + " " + newHash);
+			return newHash != contentHash;
+		} catch (Exception e) {
+			e.printStackTrace();
+			Log.d("Hashes", "Error");
+		}
+
+		return true;
+	}
+
+	private void setContent(final boolean runWork){
+		new Thread(new Runnable(){
+			@Override
+			public void run() {
+				try {
+					String html = getHtml(path);
+					contentHash = html.hashCode();
+
+					if(context!=null)
+						saveToStorage(context);
+					//we need to refresh data, which push to worker
+					if(runWork)
+						runWorker();
+
+					Log.d("Hashes", "contentHash= " + contentHash);
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.d("Hashes", "Error");
+				}
+			}
+		}).start();
+	}
+
 }

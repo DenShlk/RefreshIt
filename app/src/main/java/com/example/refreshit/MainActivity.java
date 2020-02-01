@@ -2,12 +2,17 @@ package com.example.refreshit;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.LayoutManager;
 import androidx.work.WorkManager;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -26,7 +32,9 @@ public class MainActivity extends AppCompatActivity {
 
 	static final private int GET_URL = 1;
 	static final private int GET_PARAMS = 2;
+
 	static final private String PAGE_LIST_FILE = "_PAGE_LIST_";
+
 	static final private String TAG = "DEBUG_MAIN_ACTIVE";
 
 	List<PageInfo> active_pages = new ArrayList<>(), archive_pages = new ArrayList<>();
@@ -41,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//WorkManager.getInstance().cancelAllWork();
 
 		setContentView(R.layout.activity_main);
 
@@ -95,8 +102,6 @@ public class MainActivity extends AppCompatActivity {
 				case("A"):
 					addActive(archive_pages.get(position));
 					deleteArchive(position);
-
-					active_pages.get(active_pages.size() - 1).runWorker();
 					break;
 				case("D"):
 					deleteArchive(position);
@@ -116,11 +121,11 @@ public class MainActivity extends AppCompatActivity {
 			int active_count = Integer.parseInt(br.readLine());
 			for (int i = 0; i < active_count; i++) {
 				//printFile(br.readLine());
-				active_pages.add(new PageInfo(br.readLine(), MainActivity.this));
+				active_pages.add(new PageInfo(br.readLine(), MainActivity.this, true));
 			}
 			int archive_count = Integer.parseInt(br.readLine());
 			for (int i = 0; i < archive_count; i++) {
-				archive_pages.add(new PageInfo(br.readLine(), MainActivity.this));
+				archive_pages.add(new PageInfo(br.readLine(), MainActivity.this, false));
 			}
 
 			br.close();
@@ -224,9 +229,9 @@ public class MainActivity extends AppCompatActivity {
 				delayUnit = data.getIntExtra("DelayUnit", TimeUnit.HOURS.ordinal());
 
 				PageInfo page = new PageInfo(name, path, delayTime, delayUnit, true);
-				page.saveToStorage(MainActivity.this);
 
 				addActive(page);
+				page.saveToStorage(MainActivity.this);
 			}
 		}
 	}
@@ -234,11 +239,13 @@ public class MainActivity extends AppCompatActivity {
 	void addActive(PageInfo page) {
 		active_pages.add(page);
 		savePageList();
+		page.runWorker();
 
 		active_adapter.notifyItemRangeInserted(active_pages.size() - 1, 1);
 	}
 
 	void deleteActive(int position) {
+		active_pages.get(position).clearStorage(MainActivity.this);
 		active_pages.get(position).stopWorker();
 		active_pages.remove(position);
 		savePageList();
@@ -254,6 +261,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	void deleteArchive(int position) {
+		archive_pages.get(position).clearStorage(MainActivity.this);
 		archive_pages.remove(position);
 		archive_adapter.notifyItemRangeRemoved(position, 1);
 		savePageList();
