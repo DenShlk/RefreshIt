@@ -60,7 +60,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
-                android:onClick="reselect_delay"
+                android:onClick="reselectDelay"
                 android:text="15 min" />
 
             <RadioButton
@@ -68,7 +68,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
-                android:onClick="reselect_delay"
+                android:onClick="reselectDelay"
                 android:text="30 min" />
 
             <RadioButton
@@ -76,7 +76,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
-                android:onClick="reselect_delay"
+                android:onClick="reselectDelay"
                 android:text="1 hour" />
 
             <RadioButton
@@ -84,7 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
-                android:onClick="reselect_delay"
+                android:onClick="reselectDelay"
                 android:text="3 hours" />
 
             <RadioButton
@@ -92,7 +92,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
-                android:onClick="reselect_delay"
+                android:onClick="reselectDelay"
                 android:text="8 hours" />
 
             <RadioButton
@@ -100,7 +100,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="30dp"
-                android:onClick="reselect_delay"
+                android:onClick="reselectDelay"
                 android:text="1 day" />
         </RadioGroup>
 
@@ -111,7 +111,7 @@
             android:layout_marginHorizontal="40dp"
             android:layout_marginTop="20dp"
             android:layout_marginBottom="0dp"
-            android:onClick="apply_click"
+            android:onClick="applyClick"
             android:text="Apply" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

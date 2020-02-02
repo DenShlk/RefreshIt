@@ -2,17 +2,11 @@ package com.example.refreshit;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.LayoutManager;
-import androidx.work.WorkManager;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -24,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -37,11 +30,11 @@ public class MainActivity extends AppCompatActivity {
 
 	static final private String TAG = "DEBUG_MAIN_ACTIVE";
 
-	List<PageInfo> active_pages = new ArrayList<>(), archive_pages = new ArrayList<>();
-	Button add_button, clear_button;
+	List<PageInfo> activePages = new ArrayList<>(), archivePages = new ArrayList<>();
+	Button addButton, clearButton;
 	RecyclerView actives, archived;
 
-	PageAdapter active_adapter, archive_adapter;
+	PageAdapter activeAdapter, archiveAdapter;
 
 	String path, name;
 	int delayTime, delayUnit;
@@ -52,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
 
 		setContentView(R.layout.activity_main);
 
-		add_button = findViewById(R.id.add_button);
-		clear_button = findViewById(R.id.clear_button);
+		addButton = findViewById(R.id.add_button);
+		clearButton = findViewById(R.id.clear_button);
 		actives = findViewById(R.id.actives);
 		archived = findViewById(R.id.archived);
 
@@ -61,13 +54,13 @@ public class MainActivity extends AppCompatActivity {
 
 		LayoutManager layoutManager = new LinearLayoutManager(this);
 		actives.setLayoutManager(layoutManager);
-		active_adapter = new PageAdapter(this, active_pages, true);
-		actives.setAdapter(active_adapter);
+		activeAdapter = new PageAdapter(this, activePages, true);
+		actives.setAdapter(activeAdapter);
 
 		layoutManager = new LinearLayoutManager(this);
 		archived.setLayoutManager(layoutManager);
-		archive_adapter = new PageAdapter(this, archive_pages, false);
-		archived.setAdapter(archive_adapter);
+		archiveAdapter = new PageAdapter(this, archivePages, false);
+		archived.setAdapter(archiveAdapter);
 
 	}
 
@@ -80,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 					//TODO: item changing
 					break;
 				case("A"):
-					addArchive(active_pages.get(position));
+					addArchive(activePages.get(position));
 					deleteActive(position);
 					break;
 				case("D"):
@@ -96,11 +89,11 @@ public class MainActivity extends AppCompatActivity {
 			switch (String.valueOf(button.getText())){
 				case("C"):
 					//TODO: item changing
-					addActive(archive_pages.get(position));
+					addActive(archivePages.get(position));
 					deleteArchive(position);
 					break;
 				case("A"):
-					addActive(archive_pages.get(position));
+					addActive(archivePages.get(position));
 					deleteArchive(position);
 					break;
 				case("D"):
@@ -112,20 +105,20 @@ public class MainActivity extends AppCompatActivity {
 
 	private void setInitialData() {
 
-		printFile(PAGE_LIST_FILE);
+		printPageListFile();
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					openFileInput(PAGE_LIST_FILE)));
 
 
-			int active_count = Integer.parseInt(br.readLine());
-			for (int i = 0; i < active_count; i++) {
-				//printFile(br.readLine());
-				active_pages.add(new PageInfo(br.readLine(), MainActivity.this, true));
+			int activeCount = Integer.parseInt(br.readLine());
+			for (int i = 0; i < activeCount; i++) {
+				//printPageListFile(br.readLine());
+				activePages.add(new PageInfo(br.readLine(), MainActivity.this, true));
 			}
-			int archive_count = Integer.parseInt(br.readLine());
-			for (int i = 0; i < archive_count; i++) {
-				archive_pages.add(new PageInfo(br.readLine(), MainActivity.this, false));
+			int archiveCount = Integer.parseInt(br.readLine());
+			for (int i = 0; i < archiveCount; i++) {
+				archivePages.add(new PageInfo(br.readLine(), MainActivity.this, false));
 			}
 
 			br.close();
@@ -162,16 +155,16 @@ public class MainActivity extends AppCompatActivity {
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
 					openFileOutput(PAGE_LIST_FILE, MODE_PRIVATE)));
 
-			bw.write(String.valueOf(active_pages.size()));
+			bw.write(String.valueOf(activePages.size()));
 			bw.newLine();
-			for (int i = 0; i < active_pages.size(); i++) {
-				bw.write(active_pages.get(i).getFileName());
+			for (int i = 0; i < activePages.size(); i++) {
+				bw.write(activePages.get(i).getFileName());
 				bw.newLine();
 			}
-			bw.write(String.valueOf(archive_pages.size()));
+			bw.write(String.valueOf(archivePages.size()));
 			bw.newLine();
-			for (int i = 0; i < archive_pages.size(); i++) {
-				bw.write(archive_pages.get(i).getFileName());
+			for (int i = 0; i < archivePages.size(); i++) {
+				bw.write(archivePages.get(i).getFileName());
 				bw.newLine();
 			}
 
@@ -181,16 +174,15 @@ public class MainActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 
-		printFile(PAGE_LIST_FILE);
+		printPageListFile();
 	}
 
-	void printFile(String file) {
-		String s = "";
+	void printPageListFile() {
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(
-					openFileInput(file)));
+					openFileInput(MainActivity.PAGE_LIST_FILE)));
 
-			s = br.readLine();
+			String s = br.readLine();
 			while (s != null) {
 				Log.d("MainActivity", s);
 				s = br.readLine();
@@ -200,12 +192,12 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-	public void add_click(View view) {
+	public void addClick(View view) {
 		path = name = "";
 		delayTime = delayUnit = -1;
 
-		Intent to_browser = new Intent(MainActivity.this, BrowserActivity.class);
-		startActivityForResult(to_browser, GET_URL);
+		Intent toBrowser = new Intent(MainActivity.this, BrowserActivity.class);
+		startActivityForResult(toBrowser, GET_URL);
 	}
 
 	@Override
@@ -214,16 +206,20 @@ public class MainActivity extends AppCompatActivity {
 
 		if (requestCode == GET_URL) {
 			if (resultCode == RESULT_OK) {
+				assert data != null;
+
 				path = data.getStringExtra("Url");
 
-				Intent to_params = new Intent(MainActivity.this, ParamsActivity.class);
-				to_params.putExtra("Url", path);
-				startActivityForResult(to_params, GET_PARAMS);
+				Intent toParams = new Intent(MainActivity.this, ParamsActivity.class);
+				toParams.putExtra("Url", path);
+				startActivityForResult(toParams, GET_PARAMS);
 			}
 		}
 
 		if (requestCode == GET_PARAMS) {
 			if (resultCode == RESULT_OK) {
+				assert data != null;
+
 				name = data.getStringExtra("Name");
 				delayTime = data.getIntExtra("DelayTime", 1);
 				delayUnit = data.getIntExtra("DelayUnit", TimeUnit.HOURS.ordinal());
@@ -237,38 +233,38 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	void addActive(PageInfo page) {
-		active_pages.add(page);
+		activePages.add(page);
 		savePageList();
 		page.runWorker();
 
-		active_adapter.notifyItemRangeInserted(active_pages.size() - 1, 1);
+		activeAdapter.notifyItemRangeInserted(activePages.size() - 1, 1);
 	}
 
 	void deleteActive(int position) {
-		active_pages.get(position).clearStorage(MainActivity.this);
-		active_pages.get(position).stopWorker();
-		active_pages.remove(position);
+		activePages.get(position).clearStorage(MainActivity.this);
+		activePages.get(position).stopWorker();
+		activePages.remove(position);
 		savePageList();
 
-		active_adapter.notifyItemRangeRemoved(position, 1);
+		activeAdapter.notifyItemRangeRemoved(position, 1);
 	}
 
 	void addArchive(PageInfo page) {
-		archive_pages.add(page);
+		archivePages.add(page);
 		savePageList();
 
-		archive_adapter.notifyItemRangeInserted(archive_pages.size() - 1, 1);
+		archiveAdapter.notifyItemRangeInserted(archivePages.size() - 1, 1);
 	}
 
 	void deleteArchive(int position) {
-		archive_pages.get(position).clearStorage(MainActivity.this);
-		archive_pages.remove(position);
-		archive_adapter.notifyItemRangeRemoved(position, 1);
+		archivePages.get(position).clearStorage(MainActivity.this);
+		archivePages.remove(position);
+		archiveAdapter.notifyItemRangeRemoved(position, 1);
 		savePageList();
 	}
 
 	public void clearClick(View view){
-		while(!archive_pages.isEmpty())
+		while(!archivePages.isEmpty())
 			deleteArchive(0);
 	}
 }

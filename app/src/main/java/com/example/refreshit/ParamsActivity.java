@@ -18,48 +18,48 @@ import java.util.concurrent.TimeUnit;
 // Активность для финальной настройки добавляемой страницы
 public class ParamsActivity extends AppCompatActivity {
 
-	EditText name_input;
-	TextView url_text;
-	Button apply_button;
+	EditText nameInput;
+	TextView urlText;
+	Button applyButton;
 	List<RadioButton> delays = new ArrayList<>();
 	RadioGroup radioGroup;
-	RadioButton selected_button;
+	RadioButton selectedButton;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_params);
 
-		name_input = findViewById(R.id.name_input);
-		apply_button = findViewById(R.id.apply_button);
-		url_text = findViewById(R.id.url_text);
+		nameInput = findViewById(R.id.name_input);
+		applyButton = findViewById(R.id.apply_button);
+		urlText = findViewById(R.id.url_text);
 		radioGroup = findViewById(R.id.radioGroup);
 		for (int i = 0; i < radioGroup.getChildCount(); i++) {
 			if(radioGroup.getChildAt(i) instanceof RadioButton)
 				delays.add((RadioButton) radioGroup.getChildAt(i));
 		}
 
-		selected_button = findViewById(R.id.rbutton_1_hour);
+		selectedButton = findViewById(R.id.rbutton_1_hour);
 
 		String url = getIntent().getStringExtra("Url");
-		url_text.setText(url);
+		urlText.setText(url);
 	}
 
-	public void reselect_delay(View view){
+	public void reselectDelay(View view){
 		if(view instanceof RadioButton)
-			selected_button = (RadioButton) view;
+			selectedButton = (RadioButton) view;
 	}
 
-	public void apply_click(View view){
+	public void applyClick(View view){
 
 		Intent answerIntent = new Intent();
 
-		answerIntent.putExtra("Name", String.valueOf(name_input.getText()));
+		answerIntent.putExtra("Name", String.valueOf(nameInput.getText()));
 
-		if(selected_button == null)
+		if(selectedButton == null)
 			return;
 
-		switch (String.valueOf(selected_button.getText())){
+		switch (String.valueOf(selectedButton.getText())){
 			case("15 min"):
 				answerIntent.putExtra("DelayTime", 15);
 				answerIntent.putExtra("DelayUnit", TimeUnit.MINUTES.ordinal());

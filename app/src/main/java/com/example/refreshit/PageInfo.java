@@ -1,8 +1,6 @@
 package com.example.refreshit;
 
-import android.app.Activity;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.work.Data;
@@ -20,14 +18,15 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.concurrent.TimeUnit;
 
-public class PageInfo{
-	String name, path;
+class PageInfo{
+	String name;
+	private String path;
 	int delayTime;
 	int delayUnit;
 	int contentHash = 0; // why not?
-	Context context;
+	private Context context;
 
-	public PageInfo(String name, String path, int delayTime, int delayUnit, boolean runWork) {
+	PageInfo(String name, String path, int delayTime, int delayUnit, boolean runWork) {
 		this.name = name;
 		this.path = path;
 		this.delayTime = delayTime;
@@ -40,21 +39,19 @@ public class PageInfo{
 
 	}
 
-	public PageInfo(String fileName, Context context, boolean runWork){
+	PageInfo(String fileName, Context context, boolean runWork){
 		readFromStorage(fileName, context);
 		if(runWork){
 			runWorker();
 		}
 	}
 
-
-	public PageInfo(Data data){
+	PageInfo(Data data){
 		unpackData(data);
 	}
 
 
-
-	public void runWorker(){
+	void runWorker(){
 		PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(PageRefresher.class,
 				delayTime, TimeUnit.values()[delayUnit])
 				.setInitialDelay(1, TimeUnit.MINUTES)
@@ -66,23 +63,21 @@ public class PageInfo{
 				,workRequest);
 	}
 
-	public void stopWorker(){
+	void stopWorker(){
 		WorkManager.getInstance().cancelAllWorkByTag(path);
 	}
 
-	Data packData(){
-		Data data = new Data.Builder()
+	private Data packData(){
+		return new Data.Builder()
 				.putString("Name", name)
 				.putString("Path", path)
 				.putInt("DelayTime", delayTime)
 				.putInt("DelayUnit", delayUnit)
 				.putInt("ContentHash", contentHash)
 				.build();
-
-		return data;
 	}
 
-	void unpackData(Data data){
+	private void unpackData(Data data){
 		name = data.getString("Name");
 		path = data.getString("Path");
 		delayTime = data.getInt("DelayTime", -1);
@@ -102,11 +97,11 @@ public class PageInfo{
 	<delayUnit>
 	<contentHash>
 	 */
-	String saveToStorage(Context context){
+	void saveToStorage(Context context){
 		this.context = context;
 		try {
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-					context.openFileOutput(getFileName(), context.MODE_PRIVATE)));
+					context.openFileOutput(getFileName(), Context.MODE_PRIVATE)));
 			bw.write(name);
 			bw.newLine();
 			bw.write(path);
@@ -123,10 +118,10 @@ public class PageInfo{
 			e.printStackTrace();
 		}
 
-		return getFileName();
+		getFileName();
 	}
 
-	void readFromStorage(String fileName, Context context){
+	private void readFromStorage(String fileName, Context context){
 		this.context = context;
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -150,7 +145,7 @@ public class PageInfo{
 		Log.d("PageInfo", "Файл удален :(\n");
 	}
 
-	public static String getHtml(String url) throws Exception {
+	private static String getHtml(String url) throws Exception {
 		// Build and set timeout values for the request.
 		URLConnection connection = (new URL(url)).openConnection();
 		connection.setConnectTimeout(5000);
@@ -169,7 +164,7 @@ public class PageInfo{
 		return html.toString();
 	}
 
-	public boolean checkContentUpdates(){
+	boolean checkContentUpdates(){
 		try {
 			String newHtml = getHtml(path);
 			int newHash = newHtml.hashCode();

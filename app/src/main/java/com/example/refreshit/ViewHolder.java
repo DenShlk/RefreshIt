@@ -8,19 +8,19 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 // Непосредственно создаем элемет списка
-public class ViewHolder extends RecyclerView.ViewHolder {
+class ViewHolder extends RecyclerView.ViewHolder {
 
 	final TextView nameText, delayText;
-	final Button archive_button, change_button, delete_button;
-	final MainActivity activity;
+	private final Button archiveButton, changeButton, deleteButton;
+	private final MainActivity activity;
 
 	ViewHolder(View view, Context context, final boolean isActive) {
 		super(view);
 		this.activity = (MainActivity) context;
 		this.nameText = view.findViewById(R.id.name);
 		this.delayText = view.findViewById(R.id.delay);
-		this.archive_button = view.findViewById(R.id.arhive_button);
-		archive_button.setOnClickListener(new View.OnClickListener() {
+		this.archiveButton = view.findViewById(R.id.arhive_button);
+		archiveButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				if(isActive)
@@ -29,8 +29,8 @@ public class ViewHolder extends RecyclerView.ViewHolder {
 					activity.archiveItemClick(v, getAdapterPosition());
 			}
 		});
-		this.change_button = view.findViewById(R.id.change_button);
-		change_button.setOnClickListener(new View.OnClickListener() {
+		this.changeButton = view.findViewById(R.id.change_button);
+		changeButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				if(isActive)
@@ -39,8 +39,8 @@ public class ViewHolder extends RecyclerView.ViewHolder {
 					activity.archiveItemClick(v, getAdapterPosition());
 			}
 		});
-		this.delete_button = view.findViewById(R.id.delete_button);
-		delete_button.setOnClickListener(new View.OnClickListener() {
+		this.deleteButton = view.findViewById(R.id.delete_button);
+		deleteButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				if(isActive)

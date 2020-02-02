@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
@@ -15,8 +16,8 @@ import java.util.concurrent.TimeUnit;
 public class PageAdapter extends RecyclerView.Adapter<ViewHolder> {
 	private LayoutInflater inflater;
 	private List<PageInfo> pages;
-	Context context;
-	boolean isActive;
+	private Context context;
+	private boolean isActive;
 
 	PageAdapter(Context context, List<PageInfo> pages, boolean isActive) {
 		this.context = context;
@@ -25,8 +26,9 @@ public class PageAdapter extends RecyclerView.Adapter<ViewHolder> {
 		this.isActive = isActive;
 	}
 
+	@NonNull
 	@Override
-	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+	public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
 		View view = inflater.inflate(R.layout.active_list_item, parent, false);
 		return new ViewHolder(view, context, isActive);
@@ -37,7 +39,7 @@ public class PageAdapter extends RecyclerView.Adapter<ViewHolder> {
 	public void onBindViewHolder(ViewHolder holder, int position) {
 		PageInfo page = pages.get(position);
 		holder.nameText.setText(page.name);
-		holder.delayText.setText(String.valueOf(page.delayTime) + " " + TimeUnit.values()[page.delayUnit].name());
+		holder.delayText.setText(page.delayTime + " " + TimeUnit.values()[page.delayUnit].name());
 	}
 
 	@Override
