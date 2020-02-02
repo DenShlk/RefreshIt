@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class BrowserActivity extends AppCompatActivity {
 
 	static final private int ADD_PAGE = 1;
-	static final private String INITAL_URL = "http://google.com";
+	static final private String INIT_URL = "http://www.google.com";
 
 	WebView webView;
 	Button confirmButton;
@@ -30,24 +30,27 @@ public class BrowserActivity extends AppCompatActivity {
 
 		webView = findViewById(R.id.webView);
 
-		webView.getSettings().setJavaScriptEnabled(true);
-		webView.loadUrl(INITAL_URL);
-		webView.setWebViewClient(new MyWebViewClient());
-
 		urlInput = findViewById(R.id.url_input);
-		urlInput.setText(INITAL_URL);
+		urlInput.setText(INIT_URL);
 		urlInput.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
 			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				webView.loadUrl(String.valueOf(s));
-			}
+			public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
 			@Override
-			public void afterTextChanged(Editable s) {}
+			public void afterTextChanged(Editable s) {
+				if(urlInput.hasFocus())
+					if(webView.getUrl().compareTo(String.valueOf(s))!=0)
+						webView.loadUrl(String.valueOf(s));
+			}
 		});
+
+
+		webView.getSettings().setJavaScriptEnabled(true);
+		webView.loadUrl(INIT_URL);
+		webView.setWebViewClient(new MyWebViewClient(urlInput));
 	}
 
 	@Override

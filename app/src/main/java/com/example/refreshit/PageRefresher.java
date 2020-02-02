@@ -26,7 +26,7 @@ public class PageRefresher  extends Worker {
 	@Override
 	public Result doWork() {
 
-		PageInfo page = new PageInfo(getInputData());
+		PageInfo page = new PageInfo(getInputData(), getApplicationContext());
 
 		createNotificationChannel();
 

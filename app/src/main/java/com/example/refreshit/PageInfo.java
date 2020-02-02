@@ -10,17 +10,19 @@ import androidx.work.WorkManager;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 class PageInfo{
 	String name;
 	private String path;
+	private List<String> content;
 	int delayTime;
 	int delayUnit;
 	int contentHash = 0; // why not?
@@ -46,8 +48,9 @@ class PageInfo{
 		}
 	}
 
-	PageInfo(Data data){
-		unpackData(data);
+	PageInfo(Data data, Context context){
+		path = data.getString("Path");
+		readFromStorage(getFileName(), context);
 	}
 
 
@@ -69,20 +72,8 @@ class PageInfo{
 
 	private Data packData(){
 		return new Data.Builder()
-				.putString("Name", name)
 				.putString("Path", path)
-				.putInt("DelayTime", delayTime)
-				.putInt("DelayUnit", delayUnit)
-				.putInt("ContentHash", contentHash)
 				.build();
-	}
-
-	private void unpackData(Data data){
-		name = data.getString("Name");
-		path = data.getString("Path");
-		delayTime = data.getInt("DelayTime", -1);
-		delayUnit = data.getInt("DelayUnit", -1);
-		contentHash = data.getInt("ContentHash", -1);
 	}
 
 	String getFileName(){
@@ -96,6 +87,7 @@ class PageInfo{
 	<delayTime>
 	<delayUnit>
 	<contentHash>
+	<content>
 	 */
 	void saveToStorage(Context context){
 		this.context = context;
@@ -112,13 +104,27 @@ class PageInfo{
 			bw.newLine();
 			bw.write(String.valueOf(contentHash));
 			bw.newLine();
+			bw.write(content2String());
+			bw.newLine();
 			bw.close();
 			Log.d("PageInfo", "Файл записан\n");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		getFileName();
+	}
+
+	private String content2String(){
+		String result = content.get(0);
+		for (int i = 1; i < content.size(); i++) {
+			result += "<" + content.get(i);
+			//use '<' because it shouldn't contains in content
+		}
+		return result;
+	}
+	private void string2Content(String input){
+		content = Arrays.asList(input.split("<"));
 	}
 
 	private void readFromStorage(String fileName, Context context){
@@ -132,10 +138,11 @@ class PageInfo{
 			delayTime = Integer.parseInt(br.readLine());
 			delayUnit = Integer.parseInt(br.readLine());
 			contentHash = Integer.parseInt(br.readLine());
-
+			string2Content(br.readLine());
+			Log.d("Content read", String.valueOf(content.size()));
 			br.close();
 			Log.d("PageInfo", "Файл считан\n");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -167,9 +174,15 @@ class PageInfo{
 	boolean checkContentUpdates(){
 		try {
 			String newHtml = getHtml(path);
-			int newHash = newHtml.hashCode();
-			Log.d("Hashes", contentHash + " " + newHash);
-			return newHash != contentHash;
+			//int newHash = newHtml.hashCode();
+			//Log.d("Hashes", contentHash + " " + newHash);
+
+			List<String> newContent = HtmlComparer.getContentFromHtml(newHtml);
+			Log.d("Content", String.valueOf(newContent.size()));
+			Log.d("Html now", newHtml.length() + " " + newHtml);
+
+			Log.d("Compare", String.valueOf(HtmlComparer.tableCompare(content, newContent));
+			//return newHash != contentHash;
 		} catch (Exception e) {
 			e.printStackTrace();
 			Log.d("Hashes", "Error");
@@ -185,6 +198,7 @@ class PageInfo{
 				try {
 					String html = getHtml(path);
 					contentHash = html.hashCode();
+					content = HtmlComparer.getContentFromHtml(html);
 
 					if(context!=null)
 						saveToStorage(context);
@@ -193,6 +207,8 @@ class PageInfo{
 						runWorker();
 
 					Log.d("Hashes", "contentHash= " + contentHash);
+					Log.d("Content now", content.length() + " " + content);
+					Log.d("Html now", html.length() + " " + html);
 				} catch (Exception e) {
 					e.printStackTrace();
 					Log.d("Hashes", "Error");

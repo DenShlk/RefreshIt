@@ -18,6 +18,7 @@
             android:ems="10"
             android:hint="Enter url path here"
             android:inputType="textPersonName"
+            android:selectAllOnFocus="true"
             android:text="Name" />
 
         <WebView
